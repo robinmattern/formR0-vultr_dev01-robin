@@ -1,0 +1,76 @@
+#!/bin/bash
+
+if [ "$1" == "" ]; then
+
+echo ""
+echo "    Hello from FormR Tools"
+echo "    (FRTools_ubuntu-master)"
+echo "    --------------------------------------"
+echo "    frt proxy [ test | stop | start | restart | reload | list ]"
+echo "    frt proxy log [ list | acc | err | set {App} ]"
+echo ""
+
+   fi
+# ---------------------------------------------------------------
+
+if [ "${1:0:3}" == "pro" ]; then
+
+# ---------------------------------------------------------------
+
+   if [ "${2:0:3}" == "log" ]; then
+
+      if [ "${3:0:2}" == "li" ]; then
+            rdir -d 2 -s 2 /var/log/nginx
+            exit
+            fi
+
+#           aApp="fr218d_FRApps-"
+#           aApp="FRApps-"
+            aApp=""
+
+            aLog=access.log; aFmt="  %-15s  %s  %3s  %4s  %4s  %s"
+      if [ "${3:0:3}" == "acc" ]; then
+            aLog=${aApp}access.log;
+            aFmt="  %-15s  %s  %3s  %4s  %4s  %s";
+            aAwk="{ printf \"${aFmt}\\n\", \$1, substr(\$4,2), \$9, \$10, substr(\$6,2,4), \$7 }"
+            fi
+      if [ "${3:0:3}" == "err" ]; then
+            aLog=${aApp}error.log;
+            aFmt="  %s";
+            aAwk="{ printf \"${aFmt}\\n\", \$0 }"
+            fi
+      if [ "${3:0:3}" == "deb" ]; then
+            aLog=${aApp}debug.log;
+            aFmt="  %s";
+            aAwk="{ printf \"${aFmt}\\n\", \$0 }"
+            fi
+                                       aLines="-n 30";    bFollow=0
+      if [ "${4:0:3}" == "fol" ]; then aLines="-n 30 -f"; bFollow=1; fi
+      if [ "${4:0:2}" == "-f"  ]; then aLines="-n 30 -f"; bFollow=1; fi
+
+      echo ""
+ #    echo "  aAwk: ${aAwk}"; exit
+      echo "$ tail ${aLines} \"/var/log/nginx/${aLog}\""
+      echo ""
+      if [ "${bFollow}" == "0" ]; then
+              tail ${aLines} "/var/log/nginx/${aLog}" | awk -e "${aAwk}" | sort
+         else
+              tail ${aLines} "/var/log/nginx/${aLog}" | awk '/^X-/ { print "   " $0 }'
+              fi
+      echo ""
+      exit
+      fi
+
+
+   echo ""
+   if [ "${2:0:3}" == "sto" ]; then systemctl stop nginx;    2>&1 | awk '{ print "   " $0 }'; fi
+   if [ "${2:0:3}" == "sta" ]; then systemctl start nginx;   2>&1 | awk '{ print "   " $0 }'; fi
+   if [ "${2:0:3}" == "res" ]; then systemctl restart nginx; 2>&1 | awk '{ print "   " $0 }'; fi
+   if [ "${2:0:3}" == "rel" ]; then systemctl reload nginx   2>&1 | awk '{ print "   " $0 }'; fi
+   if [ "${2:0:3}" == "tes" ]; then nginx -t                      | awk '{ print "   " $0 }'; fi
+   echo "   complete $( date '+%Y-%m-%d %H:%M' )"
+   echo ""
+
+   fi
+# ---------------------------------------------------------------
+
